@@ -1,7 +1,7 @@
-import { posicionarRato } from './rat';
 import { getRandomInt } from '../utils';
+import { posicionarRato } from './rat';
 
-export const gerarLabirinto = (tamanho, setPosXCheese, setPosYCheese) => {
+export const gerarLabirinto = (tamanho) => {
   var auxMaze = [];
 
   for (let i = 0; i < tamanho; i++) {
@@ -14,7 +14,6 @@ export const gerarLabirinto = (tamanho, setPosXCheese, setPosYCheese) => {
         isRat: false,
         isCheese: false,
         isVisitedByGenerator: false,
-        isVisited: false,
         left: false,
         top: false,
         right: false,
@@ -23,37 +22,34 @@ export const gerarLabirinto = (tamanho, setPosXCheese, setPosYCheese) => {
     }
   }
 
-  const initialPosX = 0, initialPosY = 0;
-
-  auxMaze = posicionarRato(auxMaze, initialPosX, initialPosY);
-  auxMaze = gerarCaminho(auxMaze, initialPosX, initialPosY);
-  auxMaze = posicionarQueijo(auxMaze, setPosXCheese, setPosYCheese);
-
   return auxMaze;
 };
 
-export const posicionarQueijo = (maze, setPosXCheese, setPosYCheese) => {
+export const posicionarQueijo = (maze) => {
+  var isValid = false;
 
+  while (!isValid) {
+    var posX = getRandomInt(0, maze.length - 1);
+    var posY = getRandomInt(0, maze.length - 1);
 
-  const posX = getRandomInt(0, maze.length - 1);
-  const posY = getRandomInt(0, maze.length - 1);
+    var auxMaze = maze;
 
+    if (auxMaze[posX][posY].isVisitedByGenerator && !auxMaze[posX][posY].isRat) {
 
-  var auxMaze = maze;
+      auxMaze[posX][posY].isCheese = true;
 
-  if (auxMaze[posX][posY].isVisitedByGenerator && !auxMaze[posX][posY].isRat) {
-
-    auxMaze[posX][posY].isCheese = true;
-    setPosXCheese(posX);
-    setPosYCheese(posY);
-
-    return auxMaze;
+      isValid = true;
+    }
   }
 
-  return posicionarQueijo(auxMaze);
+  return {
+    maze: auxMaze,
+    posX,
+    posY,
+  }
 };
 
-const gerarCaminho = (maze, linha, coluna) => {
+export const gerarCaminho = (maze, linha, coluna) => {
 
   const direcoes = [
     { direction: 'right', isUsed: false },
@@ -137,3 +133,137 @@ const verificarStep = step => {
   return step.isVisitedByGenerator;
 }
 
+export const mapearLabirinto = (maze, cheese, finder, oList, cList) => {
+
+  const direcoes = [
+    { direction: 'top', isValid: maze[finder.posX][finder.posY].top },
+    { direction: 'right', isValid: maze[finder.posX][finder.posY].right },
+    { direction: 'bottom', isValid: maze[finder.posX][finder.posY].bottom },
+    { direction: 'left', isValid: maze[finder.posX][finder.posY].left },
+  ];
+
+  var auxOList = oList;
+  var distanciaInicio = 0;
+  var distanciaCheese = 0;
+  var value = 0;
+
+  direcoes.filter(dir => dir.isValid).map(item => {
+
+    if (item.direction === 'top') {
+
+      if (!inLists(oList, cList, { posX: finder.posX - 1, posY: finder.posY })) {
+
+        distanciaInicio = auxOList.filter(item => item.posX === finder.posX && item.posY === finder.posY)[0].distanciaInicio + 1;
+        distanciaCheese = Math.abs((cheese.posX + cheese.posY) - ((finder.posX - 1) + (finder.posY)));
+
+        value = distanciaInicio + distanciaCheese;
+
+        auxOList = [...auxOList, {
+          posX: finder.posX - 1,
+          posY: finder.posY,
+          posXDad: finder.posX,
+          posYDad: finder.posY,
+          distanciaInicio,
+          value,
+        }];
+
+      }
+
+    } else if (item.direction === 'right') {
+
+      if (!inLists(oList, cList, { posX: finder.posX, posY: finder.posY + 1 })) {
+
+        distanciaInicio = auxOList.filter(item => item.posX === finder.posX && item.posY === finder.posY)[0].distanciaInicio + 1;
+        distanciaCheese = Math.abs((cheese.posX + cheese.posY) - ((finder.posX) + (finder.posY + 1)));
+        value = distanciaInicio + distanciaCheese;
+
+        auxOList = [...auxOList, {
+          posX: finder.posX,
+          posY: finder.posY + 1,
+          posXDad: finder.posX,
+          posYDad: finder.posY,
+          distanciaInicio,
+          value,
+        }];
+
+      }
+
+    } else if (item.direction === 'bottom') {
+
+      if (!inLists(oList, cList, { posX: finder.posX + 1, posY: finder.posY })) {
+
+        distanciaInicio = auxOList.filter(item => item.posX === finder.posX && item.posY === finder.posY)[0].distanciaInicio + 1;
+        distanciaCheese = Math.abs((cheese.posX + cheese.posY) - ((finder.posX + 1) + (finder.posY)));
+
+        value = distanciaInicio + distanciaCheese;
+
+        auxOList = [...auxOList, {
+          posX: finder.posX + 1,
+          posY: finder.posY,
+          posXDad: finder.posX,
+          posYDad: finder.posY,
+          distanciaInicio,
+          value,
+        }];
+      }
+
+    } else if (item.direction === 'left') {
+
+      if (!inLists(oList, cList, { posX: finder.posX, posY: finder.posY - 1 })) {
+
+        distanciaInicio = auxOList.filter(item => item.posX === finder.posX && item.posY === finder.posY)[0].distanciaInicio + 1;
+        distanciaCheese = Math.abs((cheese.posX + cheese.posY) - ((finder.posX) + (finder.posY - 1)));
+
+        console.log('left');
+        console.log(distanciaInicio);
+        console.log(distanciaCheese);
+
+        value = distanciaInicio + distanciaCheese;
+
+        auxOList = [...auxOList, {
+          posX: finder.posX,
+          posY: finder.posY - 1,
+          posXDad: finder.posX,
+          posYDad: finder.posY,
+          distanciaInicio,
+          value,
+        }];
+
+      }
+
+    }
+
+  });
+
+  var auxCList = [...cList, auxOList.filter(s => s.posX === finder.posX || s.posY === finder.posY)[0]];
+  auxOList = auxOList.filter(s => s.posX !== finder.posX || s.posY !== finder.posY);
+
+  auxOList.sort((x, y) => {
+    if (x.value > y.value) return 1;
+    if (x.value < y.value) return -1;
+    return 0;
+  });
+
+  if (finder.posX === cheese.posX && finder.posY === cheese.posY) {
+    return {
+      oList: auxOList,
+      cList: auxCList
+    };
+  }
+
+  if (auxOList.length > 0) {
+    return mapearLabirinto(maze, cheese, { posX: auxOList[0].posX, posY: auxOList[0].posY }, auxOList, auxCList);
+  } else {
+    return {
+      oList: auxOList,
+      cList: auxCList
+    };
+  }
+}
+
+const inLists = (oList, cList, finder) => {
+  const resultOList = oList.filter(item => item.posX === finder.posX && item.posY === finder.posY).length;
+  const resultCList = cList.filter(item => item.posX === finder.posX && item.posY === finder.posY).length;
+
+  return (resultOList > 0 || resultCList > 0) ? true : false;
+}

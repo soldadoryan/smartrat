@@ -12,22 +12,22 @@ export const Container = styled.div`
     top: 0;
     right: 0;
     background-color: white;
-    font-size: 8px;
+    font-size: 12px;
   }
   
   .rat {
-    height: 40px;
+    height: 60px;
   }
 
   .cheese {
-    height: 35px;
+    height: 40px;
     
   }
 
-  &.right { border-right-color: rgba(0, 255, 0, 0.1); }
-  &.bottom { border-bottom-color: rgba(0, 255, 0, 0.1); }
-  &.left { border-left-color: rgba(0, 255, 0, 0.1); }
-  &.top { border-top-color: rgba(0, 255, 0, 0.1); }
+  &.right { border-right-color: rgba(0, 0, 0, 0.1); }
+  &.bottom { border-bottom-color: rgba(0, 0, 0, 0.1); }
+  &.left { border-left-color: rgba(0, 0, 0, 0.1); }
+  &.top { border-top-color: rgba(0, 0, 0, 0.1); }
 
   /* &.right { border-right: 0; }
   &.bottom { border-bottom: 0; }

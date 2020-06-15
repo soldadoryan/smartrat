@@ -4,7 +4,7 @@ import { Container } from './styles';
 import Rat from '../../assets/rat.png';
 import Cheese from '../../assets/cheese.png';
 
-function Step({ info }) {
+function Step({ info, showIndexes }) {
 
   const [classes, setClasses] = useState('');
 
@@ -25,7 +25,7 @@ function Step({ info }) {
 
   return (
     <Container className={classes}>
-      <span>{`[${info.posX}][${info.posY}]`}</span>
+      {showIndexes && <span>{`[${info.posX}][${info.posY}]`}</span>}
       {info.isRat && <img className='rat' src={Rat} alt='rato' />}
       {info.isCheese && <img className='cheese' src={Cheese} alt='queijo' />}
     </Container>
