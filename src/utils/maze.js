@@ -1,5 +1,4 @@
 import { getRandomInt } from '../utils';
-import { posicionarRato } from './rat';
 
 export const gerarLabirinto = (tamanho) => {
   var auxMaze = [];
@@ -26,26 +25,14 @@ export const gerarLabirinto = (tamanho) => {
 };
 
 export const posicionarQueijo = (maze) => {
-  var isValid = false;
+  let auxMaze = maze;
 
-  while (!isValid) {
-    var posX = getRandomInt(0, maze.length - 1);
-    var posY = getRandomInt(0, maze.length - 1);
-
-    var auxMaze = maze;
-
-    if (auxMaze[posX][posY].isVisitedByGenerator && !auxMaze[posX][posY].isRat) {
-
-      auxMaze[posX][posY].isCheese = true;
-
-      isValid = true;
-    }
-  }
+  auxMaze[0][0].isCheese = true;
 
   return {
     maze: auxMaze,
-    posX,
-    posY,
+    posX: 0,
+    posY: 0
   }
 };
 
@@ -134,6 +121,7 @@ const verificarStep = step => {
 }
 
 export const mapearLabirinto = (maze, cheese, finder, oList, cList) => {
+  console.log("Teste de parada", finder, cheese);
 
   const direcoes = [
     { direction: 'top', isValid: maze[finder.posX][finder.posY].top },
@@ -214,10 +202,6 @@ export const mapearLabirinto = (maze, cheese, finder, oList, cList) => {
         distanciaInicio = auxOList.filter(item => item.posX === finder.posX && item.posY === finder.posY)[0].distanciaInicio + 1;
         distanciaCheese = Math.abs((cheese.posX + cheese.posY) - ((finder.posX) + (finder.posY - 1)));
 
-        console.log('left');
-        console.log(distanciaInicio);
-        console.log(distanciaCheese);
-
         value = distanciaInicio + distanciaCheese;
 
         auxOList = [...auxOList, {
@@ -243,7 +227,7 @@ export const mapearLabirinto = (maze, cheese, finder, oList, cList) => {
     if (x.value < y.value) return -1;
     return 0;
   });
-
+  console.log("OLHA AQUI PANGUA ====>", finder.posX === cheese.posX && finder.posY === cheese.posY);
   if (finder.posX === cheese.posX && finder.posY === cheese.posY) {
     return {
       oList: auxOList,

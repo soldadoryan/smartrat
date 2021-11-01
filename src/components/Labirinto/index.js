@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Step from '../Step';
 import { gerarLabirinto, gerarCaminho, posicionarQueijo, mapearLabirinto } from '../../utils/maze';
-import { posicionarRato, definirCaminho } from '../../utils/rat';
+import { posicionarRato, definirCaminho, gerarRato } from '../../utils/rat';
 import { Container, Button, Description } from './styles';
 import { toast } from 'react-toastify';
 
@@ -10,8 +10,7 @@ import BannerCheese from '../../assets/cheese.png';
 
 function Labirinto({ tamanho }) {
   const [maze, setMaze] = useState([]);
-  const [numberStep, setNumberStep] = useState(0);
-
+  const numberOfRats = 3;
   // Lists
   const [openedList, setOpenedList] = useState([]);
   const [closedList, setClosedList] = useState([]);
@@ -20,10 +19,7 @@ function Labirinto({ tamanho }) {
 
 
   // POSITIONS
-  const [posXRat, setPosXRat] = useState(0);
-  const [posYRat, setPosYRat] = useState(0);
-  const [posXFinder, setPosXFinder] = useState(0);
-  const [posYFinder, setPosYFinder] = useState(0);
+  const [rats, setRats] = useState([]);
   const [posXCheese, setPosXCheese] = useState('');
   const [posYCheese, setPosYCheese] = useState('');
 
@@ -32,70 +28,82 @@ function Labirinto({ tamanho }) {
 
   useEffect(() => {
     var auxMaze = gerarLabirinto(tamanho);
-    auxMaze = posicionarRato(auxMaze, posXRat, posYRat);
-    auxMaze = gerarCaminho(auxMaze, posXRat, posYRat);
     const cheese = posicionarQueijo(auxMaze);
-
+    auxMaze = cheese.maze;
     setPosXCheese(cheese.posX);
     setPosYCheese(cheese.posY);
+    auxMaze = gerarCaminho(auxMaze, cheese.posX, cheese.posY);
 
-    setMaze(cheese.maze);
+    let auxRats = rats;
 
-    const response = mapearLabirinto(
-      auxMaze,
-      { posX: cheese.posX, posY: cheese.posY },
-      { posX: posXFinder, posY: posYFinder },
-      [
-        {
-          posX: 0,
-          posY: 0,
-          indexDad: null,
-          distanciaInicio: 0,
-          value: cheese.posX + cheese.posY,
-        }
-      ],
-      closedList
-    );
-
-    setOpenedList(response.oList);
-    setClosedList(response.cList);
-
-    const responseWay = definirCaminho(response.cList, { posX: cheese.posX, posY: cheese.posY }, wayRat);
-
-    setWayRat(responseWay);
-  }, [tamanho]);
-
-  useEffect(() => {
-
-    if (posXRat === posXCheese && posYRat === posYCheese) {
-      toast.success('🐭🧀 Queijo encontrado!! ', {
-        position: "top-center",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true
-      });
-      setShowButton(false);
+    for (var i = 0; i < numberOfRats; i++) {
+      const newRat = gerarRato(auxMaze);
+      auxRats.push({ posX: newRat.posX, posY: newRat.posY, way: [] });
+      auxMaze = newRat.maze;
     }
 
-  }, [posXRat, posYRat]);
+    auxRats = auxRats.filter(item => item.way.length === 0).map(item => {
+      var auxItem = item;
+      const response = mapearLabirinto(
+        auxMaze,
+        { posX: item.posX, posY: item.posY },
+        { posX: cheese.posX, posY: cheese.posY },
+        [
+          {
+            posX: 0,
+            posY: 0,
+            indexDad: null,
+            distanciaInicio: 0,
+            value: item.posX + item.posY,
+          }
+        ],
+        closedList
+      );
+      setOpenedList(response.oList);
+      setClosedList(response.cList);
+      const responseWay = definirCaminho(response.cList, { posX: cheese.posX, posY: cheese.posY }, item.way);
+      console.log(responseWay);
+      auxItem.way = responseWay;
+      setRats(auxRats)
+      return auxItem;
+    });
+
+    setMaze(auxMaze);
+  }, [tamanho]);
+
+
+  // useEffect(() => {
+  //   rats.map(item => {
+  //     if (item.posX === posXCheese && item.posY === posYCheese) {
+  //       toast.success('🐭🧀 Queijo encontrado!! ', {
+  //         position: "top-center",
+  //         autoClose: 5000,
+  //         hideProgressBar: false,
+  //         closeOnClick: true,
+  //         pauseOnHover: true,
+  //         draggable: true
+  //       });
+  //       setShowButton(false);
+  //     }
+  //   })
+  // }, [rats]);
 
   const moverRato = () => {
+
     setShowButton(false);
-    var controlRat = wayRat.length - 1;
+    var controlRat = rats[0].way.length - 1;
 
-    var loop = window.setInterval(() => {
-      setMaze(posicionarRato(maze, wayRat[controlRat].posX, wayRat[controlRat].posY));
+    setMaze(posicionarRato(maze, rats[0].way[controlRat].posX, rats[0].way[controlRat].posY, rats[0].posX, rats[0].posY));
 
-      setPosXRat(wayRat[controlRat].posX);
-      setPosYRat(wayRat[controlRat].posY);
+    rats[0].posX = rats[0].way[controlRat].posX;
+    rats[0].posY = rats[0].way[controlRat].posY;
 
-      controlRat = controlRat - 1;
+    controlRat = controlRat - 1;
 
-      if (controlRat < 0)
-        clearInterval(loop);
-    }, 500);
+    // if (controlRat < 0) {
+    //   clearInterval(loop);
+    // }
+
   };
 
   const start = () => {
@@ -120,7 +128,6 @@ function Labirinto({ tamanho }) {
         <h3>Integrantes: </h3>
 
         <ul>
-          <li>Juan Shelton</li>
           <li>Luanne Ferreira</li>
           <li>Ryan Drumond</li>
         </ul>
