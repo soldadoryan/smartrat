@@ -227,7 +227,6 @@ export const mapearLabirinto = (maze, cheese, finder, oList, cList) => {
     if (x.value < y.value) return -1;
     return 0;
   });
-  console.log("OLHA AQUI PANGUA ====>", finder.posX === cheese.posX && finder.posY === cheese.posY);
   if (finder.posX === cheese.posX && finder.posY === cheese.posY) {
     return {
       oList: auxOList,
